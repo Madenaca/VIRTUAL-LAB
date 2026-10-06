@@ -15,11 +15,21 @@ export interface LembarKerja {
   pencegahan: string;
 }
 
+interface TeacherInfo {
+  id: number;
+  username: string;
+  nama: string;
+  nip: string;
+  role: string;
+}
+
 interface AppState {
   sessionId: string;
   nama: string;
   kelas: string;
   sudahLogin: boolean;
+  isAdmin: boolean;
+  adminUser: TeacherInfo | null;
   skor: number;
   jawabanKuis: JawabanKuis[];
   lembarKerja: LembarKerja;
@@ -30,6 +40,9 @@ interface AppState {
   setNama: (nama: string) => void;
   setKelas: (kelas: string) => void;
   setSudahLogin: (val: boolean) => void;
+  setAdminLogin: (teacher: TeacherInfo) => void;
+  logoutAdmin: () => Promise<void>;
+  checkTeacherSession: () => Promise<boolean>;
   setSkor: (skor: number) => void;
   setJawabanKuis: (j: JawabanKuis[]) => void;
   setLembarKerja: (lk: Partial<LembarKerja>) => void;
@@ -51,6 +64,8 @@ export const useAppStore = create<AppState>()(
       nama: "",
       kelas: "",
       sudahLogin: false,
+      isAdmin: false,
+      adminUser: null,
       skor: 0,
       jawabanKuis: [],
       lembarKerja: {
@@ -67,9 +82,48 @@ export const useAppStore = create<AppState>()(
       setKelas: (kelas) => set({ kelas }),
       setSudahLogin: (val) => {
         set({ sudahLogin: val });
-        if (val) {
+        if (val && !get().isAdmin) {
           get().syncWithBackend(false);
         }
+      },
+      setAdminLogin: (teacher) => {
+        set({
+          isAdmin: true,
+          adminUser: teacher,
+          sudahLogin: true,
+          nama: teacher?.nama || "Guru (Admin)",
+          kelas: "Guru / Admin",
+          waktuMulai: get().waktuMulai || Date.now(),
+        });
+      },
+      checkTeacherSession: async () => {
+        try {
+          const res = await fetch("/api/auth/teacher/me");
+          if (!res.ok) return false;
+          const data = await res.json();
+          if (data.authenticated && data.teacher) {
+            set({
+              isAdmin: true,
+              adminUser: data.teacher,
+              sudahLogin: true,
+              nama: data.teacher.nama || "Guru (Admin)",
+              kelas: "Guru / Admin",
+              waktuMulai: get().waktuMulai || Date.now(),
+            });
+            return true;
+          }
+        } catch {
+          // Ignore network error during verification
+        }
+        return false;
+      },
+      logoutAdmin: async () => {
+        try {
+          await fetch("/api/auth/teacher/logout", { method: "POST" });
+        } catch {
+          // ignore
+        }
+        get().reset();
       },
       setSkor: (skor) => {
         set({ skor });
@@ -97,6 +151,8 @@ export const useAppStore = create<AppState>()(
 
       syncWithBackend: async (completed?: boolean) => {
         const state = get();
+        // Skip syncing to student database if user is admin / teacher
+        if (state.isAdmin || state.kelas === "Guru / Admin") return true;
         if (!state.nama || !state.kelas) return false;
 
         const durasi = state.waktuMulai
@@ -134,6 +190,8 @@ export const useAppStore = create<AppState>()(
           nama: "",
           kelas: "",
           sudahLogin: false,
+          isAdmin: false,
+          adminUser: null,
           skor: 0,
           jawabanKuis: [],
           lembarKerja: {

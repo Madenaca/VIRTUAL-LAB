@@ -3,6 +3,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/useAppStore";
+import { useLabAuth } from "@/lib/useLabAuth";
 import { useClickSound } from "@/lib/useSound";
 import {
   Play, ArrowRight, CheckCircle2, AlertCircle,
@@ -82,7 +83,8 @@ const lembarKerjaFields = [
 
 export default function SimulasiPage() {
   const router = useRouter();
-  const { sudahLogin, setLembarKerja: saveToStore, lembarKerja: storeLK } = useAppStore();
+  const { isAuthorized, isChecking } = useLabAuth();
+  const { setLembarKerja: saveToStore, lembarKerja: storeLK } = useAppStore();
   const playClick = useClickSound();
 
   const [showQuestions, setShowQuestions] = useState(false);
@@ -95,15 +97,37 @@ export default function SimulasiPage() {
   });
   const [saved, setSaved] = useState(false);
 
-  if (!sudahLogin) {
+  if (isChecking) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
-        <button
-          onClick={() => { playClick(); router.push("/"); }}
-          className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold"
-        >
-          Kembali ke Halaman Utama
-        </button>
+        <div className="text-center space-y-3">
+          <div className="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-slate-600 text-sm font-medium">Memverifikasi akses laboratorium...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="text-center space-y-4 max-w-sm bg-white p-6 rounded-2xl shadow-xl border border-slate-100">
+          <p className="text-slate-700 font-medium">Kamu belum login ke laboratorium.</p>
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => { playClick(); router.push("/"); }}
+              className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors cursor-pointer"
+            >
+              Masuk sebagai Siswa
+            </button>
+            <button
+              onClick={() => { playClick(); router.push("/admin/login"); }}
+              className="px-6 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-colors cursor-pointer"
+            >
+              Portal Guru / Admin
+            </button>
+          </div>
+        </div>
       </div>
     );
   }

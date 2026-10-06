@@ -29,7 +29,7 @@ const navItems = [
 ];
 
 export default function Navbar() {
-  const { nama, kelas, sudahLogin, reset } = useAppStore();
+  const { nama, kelas, sudahLogin, isAdmin, reset, logoutAdmin } = useAppStore();
   const pathname = usePathname();
   const router = useRouter();
   const playClick = useClickSound();
@@ -43,11 +43,22 @@ export default function Navbar() {
     setShowLogoutModal(true);
   };
 
-  const handleConfirmLogout = () => {
+  const handleConfirmLogout = async () => {
     playClick();
     setShowLogoutModal(false);
-    reset();
-    router.push("/");
+    if (isAdmin) {
+      await logoutAdmin();
+      router.push("/admin/login");
+    } else {
+      reset();
+      router.push("/");
+    }
+  };
+
+  const handleReturnToDashboard = () => {
+    playClick();
+    setShowLogoutModal(false);
+    router.push("/admin");
   };
 
   const handleCancelLogout = () => {
@@ -98,38 +109,64 @@ export default function Navbar() {
 
           {/* User info, Teacher Portal, & Logout button */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {/* Teacher Portal Link */}
-            <Link
-              href="/admin/login"
-              onClick={playClick}
-              title="Portal Khusus Guru"
-              className="hidden lg:flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-blue-700 hover:bg-blue-50 border border-slate-200 transition-all cursor-pointer"
-            >
-              <GraduationCap className="w-3.5 h-3.5 text-blue-600" />
-              <span>Portal Guru</span>
-            </Link>
+            {/* Teacher Portal / Back to Dashboard Link */}
+            {isAdmin ? (
+              <Link
+                href="/admin"
+                onClick={playClick}
+                title="Kembali ke Dashboard Guru"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-[#0c4a6e] to-sky-600 hover:from-[#075985] hover:to-sky-500 shadow-sm transition-all cursor-pointer active:scale-95"
+              >
+                <GraduationCap className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Dashboard Guru</span>
+              </Link>
+            ) : (
+              <Link
+                href="/admin/login"
+                onClick={playClick}
+                title="Portal Khusus Guru"
+                className="hidden lg:flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-blue-700 hover:bg-blue-50 border border-slate-200 transition-all cursor-pointer"
+              >
+                <GraduationCap className="w-3.5 h-3.5 text-blue-600" />
+                <span>Portal Guru</span>
+              </Link>
+            )}
 
             {/* User badge */}
-            <div className="flex items-center gap-1.5 bg-slate-100/90 rounded-xl px-2.5 py-1.5 border border-slate-200/60">
-              <User className="w-3.5 h-3.5 text-slate-500" />
+            <div
+              className={`flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 border transition-colors ${
+                isAdmin
+                  ? "bg-sky-50/90 border-sky-200/80 text-sky-950"
+                  : "bg-slate-100/90 border-slate-200/60"
+              }`}
+            >
+              {isAdmin ? (
+                <ShieldCheck className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+              ) : (
+                <User className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+              )}
               <div className="text-xs">
-                <p className="font-bold text-slate-700 leading-none max-w-[70px] sm:max-w-[100px] truncate">
+                <p className="font-bold text-slate-800 leading-none max-w-[80px] sm:max-w-[120px] truncate">
                   {nama}
                 </p>
-                <p className="text-slate-500 leading-none mt-0.5 text-[10px]">
-                  {kelas}
+                <p
+                  className={`leading-none mt-0.5 text-[10px] ${
+                    isAdmin ? "text-sky-600 font-semibold" : "text-slate-500"
+                  }`}
+                >
+                  {isAdmin ? "Mode Guru" : kelas}
                 </p>
               </div>
             </div>
 
-            {/* Logout Button */}
+            {/* Logout / Exit Button */}
             <button
               onClick={handleOpenLogout}
-              title="Keluar dari Laboratorium"
+              title={isAdmin ? "Kembali / Keluar Mode Guru" : "Keluar dari Laboratorium"}
               className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 transition-all cursor-pointer shadow-sm active:scale-95"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">Keluar</span>
+              <span className="hidden md:inline">{isAdmin ? "Keluar" : "Keluar"}</span>
             </button>
           </div>
         </div>
@@ -169,32 +206,45 @@ export default function Navbar() {
               </button>
 
               <div className="flex flex-col items-center text-center space-y-3">
-                <div className="w-14 h-14 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center">
-                  <AlertTriangle className="w-7 h-7" />
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isAdmin ? "bg-sky-100 text-sky-700" : "bg-red-100 text-red-600"}`}>
+                  {isAdmin ? <GraduationCap className="w-7 h-7" /> : <AlertTriangle className="w-7 h-7" />}
                 </div>
 
                 <h3 className="text-lg font-bold text-slate-800">
-                  Keluar dari Laboratorium?
+                  {isAdmin ? "Sesi Lab Guru" : "Keluar dari Laboratorium?"}
                 </h3>
 
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  Apakah kamu yakin ingin keluar? Sesi belajarmu akan diakhiri dan kamu akan kembali ke halaman utama laboratorium.
+                  {isAdmin
+                    ? "Anda sedang mengakses laboratorium sebagai Guru / Admin. Anda dapat kembali ke Dashboard Guru atau mengakhiri sesi."
+                    : "Apakah kamu yakin ingin keluar? Sesi belajarmu akan diakhiri dan kamu akan kembali ke halaman utama laboratorium."}
                 </p>
 
-                <div className="flex gap-2 w-full pt-2">
-                  <button
-                    onClick={handleCancelLogout}
-                    className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-colors"
-                  >
-                    Batal
-                  </button>
-                  <button
-                    onClick={handleConfirmLogout}
-                    className="flex-1 py-2.5 rounded-xl bg-red-600 text-white font-semibold text-xs hover:bg-red-700 shadow-md transition-colors flex items-center justify-center gap-1.5"
-                  >
-                    <LogOut className="w-3.5 h-3.5" />
-                    Ya, Keluar Lab
-                  </button>
+                <div className="flex flex-col gap-2 w-full pt-2">
+                  {isAdmin && (
+                    <button
+                      onClick={handleReturnToDashboard}
+                      className="w-full py-2.5 rounded-xl bg-[#0c4a6e] text-white font-semibold text-xs hover:bg-[#075985] shadow-md transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <GraduationCap className="w-3.5 h-3.5" />
+                      Kembali ke Dashboard Guru
+                    </button>
+                  )}
+                  <div className="flex gap-2 w-full">
+                    <button
+                      onClick={handleCancelLogout}
+                      className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-colors cursor-pointer"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      onClick={handleConfirmLogout}
+                      className="flex-1 py-2.5 rounded-xl bg-red-600 text-white font-semibold text-xs hover:bg-red-700 shadow-md transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                      {isAdmin ? "Logout Sesi" : "Ya, Keluar Lab"}
+                    </button>
+                  </div>
                 </div>
               </div>
             </motion.div>

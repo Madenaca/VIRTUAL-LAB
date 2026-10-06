@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
@@ -15,15 +15,30 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useClickSound } from "@/lib/useSound";
+import { useAppStore } from "@/lib/useAppStore";
 
 export default function TeacherLoginPage() {
   const router = useRouter();
   const playClick = useClickSound();
+  const { setAdminLogin } = useAppStore();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Check if teacher is already logged in
+  useEffect(() => {
+    fetch("/api/auth/teacher/me")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.authenticated && data.teacher) {
+          setAdminLogin(data.teacher);
+          router.replace("/admin");
+        }
+      })
+      .catch(() => {});
+  }, [router, setAdminLogin]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +62,9 @@ export default function TeacherLoginPage() {
       const data = await res.json();
 
       if (res.ok && data.success) {
+        if (data.teacher) {
+          setAdminLogin(data.teacher);
+        }
         router.push("/admin");
       } else {
         setError(data.message || "Username atau password salah.");

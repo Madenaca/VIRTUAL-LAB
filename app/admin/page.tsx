@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 import { useClickSound } from "@/lib/useSound";
 import Link from "next/link";
+import { useAppStore } from "@/lib/useAppStore";
 
 /* ─── Types ─── */
 interface Student {
@@ -121,6 +122,7 @@ function getAvatarColor(name: string) {
 export default function TeacherDashboardPage() {
   const router = useRouter();
   const playClick = useClickSound();
+  const { setAdminLogin, logoutAdmin } = useAppStore();
 
   /* State */
   const [teacher, setTeacher] = useState<any>(null);
@@ -134,6 +136,14 @@ export default function TeacherDashboardPage() {
   const [deleteTarget, setDeleteTarget] = useState<Student | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const handleGoToLab = () => {
+    playClick();
+    if (teacher) {
+      setAdminLogin(teacher);
+    }
+    router.push("/lab");
+  };
+
   /* Auth */
   const checkAuth = useCallback(async () => {
     try {
@@ -141,6 +151,7 @@ export default function TeacherDashboardPage() {
       const data = await res.json();
       if (res.ok && data.authenticated) {
         setTeacher(data.teacher);
+        setAdminLogin(data.teacher);
       } else {
         router.push("/admin/login");
       }
@@ -149,7 +160,7 @@ export default function TeacherDashboardPage() {
     } finally {
       setAuthChecking(false);
     }
-  }, [router]);
+  }, [router, setAdminLogin]);
 
   /* Fetch data */
   const loadDashboardData = useCallback(async () => {
@@ -197,7 +208,7 @@ export default function TeacherDashboardPage() {
 
   const handleLogout = async () => {
     playClick();
-    await fetch("/api/auth/teacher/logout", { method: "POST" });
+    await logoutAdmin();
     router.push("/admin/login");
   };
 
@@ -295,15 +306,22 @@ export default function TeacherDashboardPage() {
               Dashboard
             </button>
 
-            <Link
-              href="/lab"
-              onClick={playClick}
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+            <button
+              onClick={handleGoToLab}
+              className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-700 hover:bg-sky-50 hover:text-sky-900 border border-slate-200/80 bg-slate-50/70 transition-all cursor-pointer group shadow-sm"
+              title="Masuk ke Lab Kimia sebagai guru tanpa harus login sebagai siswa"
             >
-              <Beaker className="w-4 h-4 text-slate-400" />
-              Lab Siswa
-              <ArrowUpRight className="w-3 h-3 ml-auto text-slate-300" />
-            </Link>
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center group-hover:bg-sky-600 group-hover:text-white transition-colors">
+                  <Beaker className="w-4 h-4" />
+                </div>
+                <div className="text-left">
+                  <span className="font-semibold block leading-tight text-slate-800 group-hover:text-sky-950">Akses Lab</span>
+                  <span className="text-[10px] text-emerald-600 font-semibold">Mode Guru (Aktif)</span>
+                </div>
+              </div>
+              <ArrowUpRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-600 transition-colors" />
+            </button>
           </div>
         </div>
 
@@ -368,18 +386,22 @@ export default function TeacherDashboardPage() {
             />
           </div>
 
-          {/* Profile (mobile) */}
+          {/* Header Actions & Profile */}
           <div className="flex items-center gap-2 sm:gap-3 sm:ml-4">
-            <Link
-              href="/lab"
-              className="lg:hidden p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
+            <button
+              onClick={handleGoToLab}
+              title="Akses dan uji coba laboratorium kimia langsung sebagai guru"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#0c4a6e] hover:bg-[#075985] text-white text-xs font-semibold shadow-sm transition-all cursor-pointer active:scale-95"
             >
-              <Beaker className="w-4 h-4" />
-            </Link>
+              <FlaskConical className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Buka Lab (Mode Guru)</span>
+              <span className="sm:hidden">Lab</span>
+              <ArrowUpRight className="w-3 h-3 opacity-80" />
+            </button>
             <div className="sm:hidden w-8 h-8 rounded-full overflow-hidden ring-2 ring-slate-100">
               <img src="/gambar/fatma.jpeg" alt="Profile" className="w-full h-full object-cover" />
             </div>
-            <div className="hidden sm:flex items-center gap-2.5 pl-3 border-l border-slate-200">
+            <div className="hidden sm:flex items-center gap-2.5 pl-2 border-l border-slate-200">
               <div className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-slate-100">
                 <img src="/gambar/fatma.jpeg" alt="Profile" className="w-full h-full object-cover" />
               </div>
@@ -403,11 +425,26 @@ export default function TeacherDashboardPage() {
               className="lg:hidden bg-white border-b border-slate-200 overflow-hidden"
             >
               <div className="p-3 space-y-1">
-                <Link href="/lab" className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50">
-                  <Beaker className="w-4 h-4 text-slate-400" />
-                  Buka Lab Siswa
-                </Link>
-                <button onClick={handleLogout} className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-rose-600 hover:bg-rose-50 cursor-pointer">
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    handleGoToLab();
+                  }}
+                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold text-sky-800 bg-sky-50 cursor-pointer"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <FlaskConical className="w-4 h-4 text-sky-600" />
+                    <span>Buka Lab (Mode Guru)</span>
+                  </div>
+                  <ArrowUpRight className="w-4 h-4 text-sky-500" />
+                </button>
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    handleLogout();
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-rose-600 hover:bg-rose-50 cursor-pointer"
+                >
                   <LogOut className="w-4 h-4" />
                   Keluar
                 </button>

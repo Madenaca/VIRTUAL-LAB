@@ -1,0 +1,160 @@
+@import "tailwindcss";
+
+:root {
+  --lab-blue: #1e3a5f;
+  --lab-cyan: #00b4d8;
+  --lab-yellow: #f0a500;
+  --lab-green: #22c55e;
+  --lab-red: #ef4444;
+  --lab-bg: #f0f4f8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--lab-bg);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #e2e8f0;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--lab-blue);
+  border-radius: 3px;
+}
+
+/* Hide scrollbar but keep scroll */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Lab pattern background */
+.lab-pattern {
+  background-color: #f0f4f8;
+  background-image: 
+    radial-gradient(circle at 1px 1px, rgba(30,58,95,0.06) 1px, transparent 0);
+  background-size: 32px 32px;
+}
+
+/* Glass morphism */
+.glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Glow effect */
+.glow-blue {
+  box-shadow: 0 0 20px rgba(0, 180, 216, 0.3);
+}
+
+/* Progress bar animation */
+@keyframes progress-fill {
+  from { width: 0; }
+  to { width: var(--target-width); }
+}
+
+/* Card flip */
+.flip-card {
+  perspective: 1000px;
+}
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+.flip-card:hover .flip-card-inner,
+.flip-card.flipped .flip-card-inner {
+  transform: rotateY(180deg);
+}
+.flip-card-front,
+.flip-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.flip-card-back {
+  transform: rotateY(180deg);
+  overflow-y: auto;
+}
+
+/* Pulse animation */
+@keyframes pulse-ring {
+  0% { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+.pulse-ring::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  border: 2px solid var(--lab-cyan);
+  animation: pulse-ring 1.5s infinite;
+}
+
+/* Badge gradient */
+.badge-gold {
+  background: linear-gradient(135deg, #f0a500, #ffd700);
+}
+.badge-silver {
+  background: linear-gradient(135deg, #94a3b8, #cbd5e1);
+}
+.badge-bronze {
+  background: linear-gradient(135deg, #b45309, #d97706);
+}
+
+/* Hatched / Striped bar chart pattern */
+.bg-hatched {
+  background: repeating-linear-gradient(
+    -45deg,
+    #cbd5e1,
+    #cbd5e1 3px,
+    #f1f5f9 3px,
+    #f1f5f9 6px
+  );
+}
+
+.bg-hatched-green {
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(20, 83, 45, 0.25),
+    rgba(20, 83, 45, 0.25) 3px,
+    transparent 3px,
+    transparent 6px
+  );
+}
+
+/* Print styles for certificate */
+@media print {
+  .no-print, nav, header, footer {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  body {
+    background: #ffffff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+}

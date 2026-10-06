@@ -1,0 +1,206 @@
+"use client";
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useAppStore } from "@/lib/useAppStore";
+import { useClickSound } from "@/lib/useSound";
+import {
+  FlaskConical,
+  User,
+  BookOpen,
+  Play,
+  HelpCircle,
+  Heart,
+  LogOut,
+  X,
+  AlertTriangle,
+  Gamepad2,
+  GraduationCap,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+
+const navItems = [
+  { href: "/lab", label: "Alat 3D", icon: BookOpen },
+  { href: "/simulasi", label: "Simulasi", icon: Play },
+  { href: "/game", label: "Game Lab", icon: Gamepad2 },
+  { href: "/kuis", label: "Kuis", icon: HelpCircle },
+  { href: "/refleksi", label: "Refleksi", icon: Heart },
+  { href: "/penutup", label: "Penutup", icon: FlaskConical },
+];
+
+export default function Navbar() {
+  const { nama, kelas, sudahLogin, reset } = useAppStore();
+  const pathname = usePathname();
+  const router = useRouter();
+  const playClick = useClickSound();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  // Hide on login page or admin pages
+  if (!sudahLogin || pathname === "/" || pathname.startsWith("/admin")) return null;
+
+  const handleOpenLogout = () => {
+    playClick();
+    setShowLogoutModal(true);
+  };
+
+  const handleConfirmLogout = () => {
+    playClick();
+    setShowLogoutModal(false);
+    reset();
+    router.push("/");
+  };
+
+  const handleCancelLogout = () => {
+    playClick();
+    setShowLogoutModal(false);
+  };
+
+  return (
+    <>
+      <nav className="no-print sticky top-0 z-40 glass border-b border-white/40 shadow-sm">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 flex items-center justify-between gap-2">
+          {/* Logo */}
+          <Link
+            href="/lab"
+            onClick={playClick}
+            className="flex items-center gap-2 shrink-0"
+          >
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center shadow">
+              <FlaskConical className="w-4 h-4 text-white" />
+            </div>
+            <span className="font-bold text-slate-700 hidden xl:block text-sm">
+              Lab Kimia Virtual
+            </span>
+          </Link>
+
+          {/* Nav links */}
+          <div className="flex items-center justify-center gap-1 overflow-x-auto no-scrollbar">
+            {navItems.map((item) => {
+              const active = pathname === item.href;
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={playClick}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
+                    active
+                      ? "bg-blue-600 text-white shadow"
+                      : "text-slate-600 hover:bg-slate-100"
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5 shrink-0" />
+                  <span className="hidden sm:inline">{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* User info, Teacher Portal, & Logout button */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* Teacher Portal Link */}
+            <Link
+              href="/admin/login"
+              onClick={playClick}
+              title="Portal Khusus Guru"
+              className="hidden lg:flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-blue-700 hover:bg-blue-50 border border-slate-200 transition-all cursor-pointer"
+            >
+              <GraduationCap className="w-3.5 h-3.5 text-blue-600" />
+              <span>Portal Guru</span>
+            </Link>
+
+            {/* User badge */}
+            <div className="flex items-center gap-1.5 bg-slate-100/90 rounded-xl px-2.5 py-1.5 border border-slate-200/60">
+              <User className="w-3.5 h-3.5 text-slate-500" />
+              <div className="text-xs">
+                <p className="font-bold text-slate-700 leading-none max-w-[70px] sm:max-w-[100px] truncate">
+                  {nama}
+                </p>
+                <p className="text-slate-500 leading-none mt-0.5 text-[10px]">
+                  {kelas}
+                </p>
+              </div>
+            </div>
+
+            {/* Logout Button */}
+            <button
+              onClick={handleOpenLogout}
+              title="Keluar dari Laboratorium"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 transition-all cursor-pointer shadow-sm active:scale-95"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden md:inline">Keluar</span>
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Confirmation Modal Logout */}
+      <AnimatePresence>
+        {showLogoutModal && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            {/* Backdrop */}
+            <motion.div
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={handleCancelLogout}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            />
+
+            {/* Modal Card */}
+            <motion.div
+              className="relative bg-white rounded-3xl shadow-2xl p-6 w-full max-w-sm z-10 border border-slate-200"
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            >
+              <button
+                onClick={handleCancelLogout}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors text-slate-500"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="flex flex-col items-center text-center space-y-3">
+                <div className="w-14 h-14 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center">
+                  <AlertTriangle className="w-7 h-7" />
+                </div>
+
+                <h3 className="text-lg font-bold text-slate-800">
+                  Keluar dari Laboratorium?
+                </h3>
+
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Apakah kamu yakin ingin keluar? Sesi belajarmu akan diakhiri dan kamu akan kembali ke halaman utama laboratorium.
+                </p>
+
+                <div className="flex gap-2 w-full pt-2">
+                  <button
+                    onClick={handleCancelLogout}
+                    className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-colors"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    onClick={handleConfirmLogout}
+                    className="flex-1 py-2.5 rounded-xl bg-red-600 text-white font-semibold text-xs hover:bg-red-700 shadow-md transition-colors flex items-center justify-center gap-1.5"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    Ya, Keluar Lab
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}

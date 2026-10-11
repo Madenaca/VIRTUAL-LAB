@@ -16,6 +16,7 @@ import {
   AlertTriangle,
   Gamepad2,
   GraduationCap,
+  ShieldCheck,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 

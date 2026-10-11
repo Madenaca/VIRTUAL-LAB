@@ -6,13 +6,13 @@
 CREATE DATABASE IF NOT EXISTS lab_kimia CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE lab_kimia;
 
--- 1. Tabel Guru (Otentikasi & Profil Guru)
+-- 1. Tabel Guru (Otentikasi & Profil Guru - Cukup Username & Password)
 CREATE TABLE IF NOT EXISTS guru (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    nama VARCHAR(150) NOT NULL,
-    nip VARCHAR(50) NOT NULL,
+    nama VARCHAR(150) DEFAULT 'Guru Kimia',
+    nip VARCHAR(50) DEFAULT '-',
     role VARCHAR(20) DEFAULT 'guru',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
@@ -68,9 +68,11 @@ CREATE TABLE IF NOT EXISTS refleksi_siswa (
 ) ENGINE=InnoDB;
 
 -- ============================================================
--- DATA AWAL (SEED): GURU KIMIA
+-- DATA AWAL (SEED): GURU KIMIA (Login cukup Username & Password)
 -- ============================================================
 INSERT INTO guru (username, password_hash, nama, nip, role)
 VALUES 
-    ('admin', 'admin123', 'Fatma Alawiyah, S.Pd., Gr.', '200103272025212017', 'admin')
-ON DUPLICATE KEY UPDATE nama = VALUES(nama), nip = VALUES(nip);
+    ('admin', 'admin123', 'Guru Kimia (Admin)', '-', 'admin'),
+    ('guru_kimia', 'kimia123', 'Fatma Alawiyah, S.Pd., Gr.', '200103272025212017', 'guru')
+ON DUPLICATE KEY UPDATE password_hash = VALUES(password_hash);
+

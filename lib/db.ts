@@ -89,45 +89,7 @@ export const inMemoryStore: InMemoryData = {
       role: "guru",
     },
   ],
-  siswa: [
-    {
-      id: 1,
-      session_id: "demo-siswa-1",
-      nama: "Ahmad Fauzi",
-      kelas: "X IPA 1",
-      skor_kuis: 93,
-      durasi_menit: 18,
-      status_selesai: 1,
-      created_at: new Date(Date.now() - 3600000 * 4).toISOString(),
-      updated_at: new Date(Date.now() - 3600000 * 3.7).toISOString(),
-      lembar_kerja: {
-        penyebab:
-          "Siswa memanaskan larutan asam tanpa kacamata pelindung dan mulut tabung mengarah ke temannya.",
-        dampak:
-          "Terjadi bumping atau letupan larutan panas yang membahayakan mata dan kulit.",
-        solusi:
-          "Gunakan APD lengkap, tambahkan batu didih, dan arahkan tabung reaksi ke arah aman.",
-        pencegahan:
-          "Selalu cek SOP pemanasan dan kenakan kacamata pelindung sebelum menyalakan Bunsen.",
-      },
-      jawaban_kuis: [
-        { soal_id: 1, pilihan_siswa: 2, is_benar: 1 },
-        { soal_id: 2, pilihan_siswa: 2, is_benar: 1 },
-      ],
-      refleksi: {
-        hal_baru:
-          "Belajar 9 simbol GHS dan cara membaca meniskus bawah pada buret/gelas ukur.",
-        hal_menarik:
-          "Simulasi kesalahan kerja membantu memahami alasan di balik setiap aturan lab.",
-        belum_paham:
-          "Perbedaan fungsi presisi labu ukur vs buret pada analisis kuantitatif.",
-        penerapan:
-          "Akan selalu memakai jas lab dan sarung tangan saat praktikum sekolah nanti.",
-        kesan: "Sangat interaktif dan seru!",
-        skala_pemahaman: 5,
-      },
-    },
-  ],
+  siswa: [],
 };
 
 export function getPool(): Pool {
@@ -164,8 +126,8 @@ export async function initDatabase(): Promise<boolean> {
         id INT AUTO_INCREMENT PRIMARY KEY,
         username VARCHAR(50) NOT NULL UNIQUE,
         password_hash VARCHAR(255) NOT NULL,
-        nama VARCHAR(150) NOT NULL,
-        nip VARCHAR(50) NOT NULL,
+        nama VARCHAR(150) DEFAULT 'Guru Kimia',
+        nip VARCHAR(50) DEFAULT '-',
         role VARCHAR(20) DEFAULT 'guru',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       ) ENGINE=InnoDB;

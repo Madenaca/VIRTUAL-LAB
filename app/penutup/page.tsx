@@ -17,7 +17,9 @@ import {
   X,
   AlertTriangle,
   Award,
+  GraduationCap,
 } from "lucide-react";
+import { useLabAuth } from "@/lib/useLabAuth";
 
 const motivasi = [
   { quote: "Ilmu tanpa amal seperti pohon tanpa buah.", author: "Pepatah" },
@@ -45,15 +47,16 @@ const getGrade = (skor: number) => {
 
 export default function PenutupPage() {
   const router = useRouter();
-  const { nama, kelas, skor, waktuMulai, sudahLogin, reset, setStatusSelesai } = useAppStore();
+  const { isAuthorized, isChecking } = useLabAuth();
+  const { nama, kelas, skor, waktuMulai, isAdmin, reset, logoutAdmin, setStatusSelesai } = useAppStore();
   const playClick = useClickSound();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
-    if (sudahLogin) {
+    if (isAuthorized && !isAdmin) {
       setStatusSelesai(true);
     }
-  }, [sudahLogin, setStatusSelesai]);
+  }, [isAuthorized, isAdmin, setStatusSelesai]);
 
   const durasi = waktuMulai
     ? Math.max(1, Math.round((Date.now() - waktuMulai) / 60000))
@@ -76,11 +79,16 @@ export default function PenutupPage() {
     setShowLogoutModal(true);
   };
 
-  const handleConfirmLogout = () => {
+  const handleConfirmLogout = async () => {
     playClick();
     setShowLogoutModal(false);
-    reset();
-    router.push("/");
+    if (isAdmin) {
+      await logoutAdmin();
+      router.push("/admin/login");
+    } else {
+      reset();
+      router.push("/");
+    }
   };
 
   const handleCancelLogout = () => {
@@ -93,15 +101,37 @@ export default function PenutupPage() {
     router.push("/kuis");
   };
 
-  if (!sudahLogin) {
+  if (isChecking) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
-        <button
-          onClick={() => router.push("/")}
-          className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold cursor-pointer shadow-lg"
-        >
-          Kembali ke Halaman Utama
-        </button>
+        <div className="text-center space-y-3">
+          <div className="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-slate-600 text-sm font-medium">Memverifikasi akses laboratorium...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="text-center space-y-4 max-w-sm bg-white p-6 rounded-2xl shadow-xl border border-slate-100">
+          <p className="text-slate-700 font-medium">Kamu belum login ke laboratorium.</p>
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => router.push("/")}
+              className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors cursor-pointer"
+            >
+              Masuk sebagai Siswa
+            </button>
+            <button
+              onClick={() => router.push("/admin/login")}
+              className="px-6 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-colors cursor-pointer"
+            >
+              Portal Guru / Admin
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -166,13 +196,23 @@ export default function PenutupPage() {
             </div>
           </motion.div>
 
-          {/* Action buttons (Print, Ulangi Kuis, Keluar Lab) */}
+          {/* Action buttons (Print, Ulangi Kuis, Keluar Lab, Dashboard Guru) */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             className="flex flex-wrap gap-3 justify-center"
           >
+            {isAdmin && (
+              <button
+                onClick={() => { playClick(); router.push("/admin"); }}
+                className="flex items-center gap-2 px-6 py-3.5 bg-[#0c4a6e] hover:bg-[#075985] text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all cursor-pointer text-sm sm:text-base"
+              >
+                <GraduationCap className="w-5 h-5 text-sky-300" />
+                Kembali ke Dashboard Guru
+              </button>
+            )}
+
             <button
               onClick={handlePrint}
               className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-amber-600 to-yellow-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all cursor-pointer text-sm sm:text-base"
